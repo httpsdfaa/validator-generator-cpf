@@ -1,64 +1,104 @@
-import re, sys, random# fazer uso para ter utilização de somente números
+import re, sys, random # RE faz uso para ter utilização de somente números
+
+def menu():
+    input_menu = input('-1 VALIDAR CPF \n-2 GERAR CPF \n-S SAIR\n\n--> ')
+
+    while True:
+        if input_menu == '1':
+            return '1'
+        elif input_menu == '2':
+            return '2'
+        elif input_menu == 's' or input_menu == 'S':
+            print('Saindo do programa, até logo!')
+            sys.exit()
+        else:
+            print('\nENTRADA INVÁLIDA\n')
+            break
+            
+            
 
 
-def calculo_digito(conta_regressiva, cpf_nove_dez):
-    conta_regressiva = conta_regressiva
-    soma = 0
+def cpf_validation():
+    cpf_user_validation = input('Digite seu CPF para validação: ')
+    cpf_user_validation = re.sub(r'[^0-9]', '', cpf_user_validation)
 
-    for digito in cpf_nove_dez:
-        digito = int(digito)
-        
-        calculo_multiplicacao = digito * conta_regressiva # calculo da multiplicacao
-        soma += calculo_multiplicacao # calculo da soma
+    cpf_complete_calculation = cpf_calculation(cpf_user_validation, None) # calculando os dígito do CPF
 
-        conta_regressiva -= 1 # fazendo a regressiva
+    digit_repetitive = (cpf_user_validation[0] * len(cpf_user_validation)) == cpf_user_validation # tratando digitos repetivos
+
+    if len(cpf_user_validation) < 11:
+        main()
+    elif digit_repetitive:
+        main()
+    elif cpf_user_validation == cpf_complete_calculation:
+        return cpf_complete_calculation
+    else:
+        main()
+
+
+def cpf_generator():
+    cpf_generator_nine_digit = ''
+    for _ in range(9):
+        cpf_generator_nine_digit += str(random.randint(0, 9))
     
-    resultado_digito = (soma * 10) % 11 # calculo final
+    cpf_complete_calculation = cpf_calculation(None, cpf_generator_nine_digit)
+    return cpf_complete_calculation
 
-    superior_9 = resultado_digito >= 10 # maior que 9
-    inferior_10 = resultado_digito <= 9 # menor ou igual que 9
 
-    resultado_digito if superior_9 else inferior_10
-    return str(resultado_digito)
-
-def cpf_completo(cpf_nove_digitos):
-    # concatenando os nove com os decimo e o decimo primeiro digito
-    cpf_dez_digito = cpf_nove_digitos + calculo_digito(10, cpf_nove_digitos) # concatenando os 9 digitos com o decimo
-    cpf_completo = cpf_dez_digito + calculo_digito(11, cpf_dez_digito) # concatenando os 10 digitos com o decimo primeiro
+def cpf_calculation(cpf_user_param, cpf_developer_generator):
+    REGRESSION_TEN = 10
+    REGRESSION_ELEVEN = 11
     
-    return cpf_completo
+    cpf_user = cpf_user_param or cpf_developer_generator # cpf do usuário ou cpf gerado automaticamente atráves do random na funcao cpf_generator
+    cpf_user = re.sub(r'[^0-9]', '', cpf_user)
+    cpf_user_nine_digit = cpf_user[:9]
+
+    def calculation_digit(cpf_user_nine_digit, regression):
+        soma = 0
+
+        for digit in cpf_user_nine_digit:
+            digit = int(digit)
+
+            #calculo do décimo e décimo primeiro dígito
+            calculation_digit = digit * regression
+            soma += calculation_digit
+
+            regression -= 1
+    
+        result_digit = (soma * 10) % 11
+
+        inferior_ten = result_digit <= 9 
+
+        if inferior_ten:
+            return result_digit
+        else: 
+            return '0'
+    
+
+    result_digit_ten = cpf_user_nine_digit + str(calculation_digit(cpf_user_nine_digit, REGRESSION_TEN)) # descobrindo o décimo dígito
+    cpf_complete = result_digit_ten + str(calculation_digit(result_digit_ten, REGRESSION_ELEVEN)) # descobrindo o décimo primeiro dígito
+    
+    if cpf_complete == cpf_user or cpf_developer_generator: # cpf do usuário ou cpf gerado automaticamente pelo random na funcao cpf_generator
+        return cpf_complete
+    else:
+        return print('\nCPF INVÁLIDO\n')
+
 
 def main():
-    entrada_um = input(f'({1}) VALIDAR CPF \n\
-({2}) GERAR CPF \n\n-->')
-    
-    cpf_nove_digitos = ''
-    if(entrada_um == '1'):
-        cpf_usuario = input('Digite seu CPF para validação: ')
-        cpf_usuario = re.sub(r'[^0-9]', '', cpf_usuario) # aceita somente números
 
-        cpf_nove_digitos = str(cpf_usuario[:9])
+    cpf_validation_var = '1'
+    cpf_generator_var = '2'
 
-        cpf_completo(cpf_nove_digitos)
+    user_choice = menu() # armazena o valor de menu
 
-        """ 
-            CONFERIR NÚMEROS REPETIVOS E VALIDANDO ENTRADA    
-        """
-        char_usuario_repet = cpf_usuario[0] * len(cpf_usuario) # checando se os digitos são repetitivos
-        if(char_usuario_repet == cpf_usuario):
-            print("CPF INVÁLIDO")
-            sys.exit()
-        elif(cpf_usuario == cpf_completo(cpf_nove_digitos)):
-            print(f'CPF {cpf_usuario} VÁLIDO')
-        else:
-            print('O CPF é inválido')
-    elif(entrada_um == '2'):
-        for _ in range(9):
-            cpf_nove_digitos += str(random.randint(0, 9))
-        cpf_gerado = cpf_completo(cpf_nove_digitos)
-
-        print(f'CPF GERADO: {cpf_gerado}')
+    if user_choice == cpf_validation_var:
+        cpf_validation_func = cpf_validation()
+        if cpf_validation_func != None:
+            print(f'CPF {cpf_validation_func} VÁLIDO')
+    elif user_choice == cpf_generator_var:
+        if cpf_generator() != None:
+            print(f'CPF gerado: {cpf_generator()}')
     else:
-        print('Opção inválida')
+        print('Algo de errado aconteceu')
 
 main()
